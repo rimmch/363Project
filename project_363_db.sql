@@ -1,5 +1,11 @@
 
+CREATE DATABASE IF NOT EXISTS project_363_db;
+
+
 USE project_363_db;
+
+-- Disable foreign key checks temporarily, since db was limited to 200 and some fk might not be found because of that
+SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS NoteEvents;
 DROP TABLE IF EXISTS DIAGNOSES_ICD;
