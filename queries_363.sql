@@ -11,6 +11,9 @@ GROUP BY SUBJECT_ID
 HAVING COUNT(*) > 3;
 
 -- 3. Retrieve the names and admission dates of patients who were discharged without any procedures
+-- NOTE: Cannot implement as specified: dataset has no procedures table (e.g., Procedures_ICD) and no patient name fields.
+
+
 
 -- 4. List all patients who had both radiology exams and surgery during the same admission
 
@@ -64,13 +67,12 @@ GROUP BY FIRST_CAREUNIT;
 
 SELECT DISTINCT n.SUBJECT_ID, n.HADM_ID
 FROM NoteEvents n
-JOIN ICUSTAYS i
-ON n.HADM_ID = i.HADM_ID
-WHERE (
-
-    OR LOWER(n.TEXT) LIKE '%surgery%'
-)
-AND n.CHARTTIME < i.INTIME;
+JOIN ICUSTAYS i ON n.HADM_ID = i.HADM_ID
+WHERE n.CHARTTIME < i.INTIME
+  AND (
+        n.CATEGORY = 'Surgery'
+     OR LOWER(n.TEXT) LIKE '%surgery%'
+      );
 
 -- 11. Retrieve the names of patients and the number of radiology exams they had during all admissions
 
@@ -92,15 +94,14 @@ SELECT DISTINCT n.HADM_ID
 FROM NoteEvents n
 WHERE n.CATEGORY = 'Radiology'
 AND NOT EXISTS (
-    SELECT *
+    SELECT *like 
     FROM ICUSTAYS i
     WHERE i.HADM_ID = n.HADM_ID
 );
 
--- to verify that previous output is corret, compare with table icu to make sure all are there 
 
 SELECT DISTINCT HADM_ID
-FROM NoteEevents 
+FROM NoteEvents 
 WHERE CATEGORY = 'Radiology'
 
 -- 14. Retrieve the patients with the longest hospital stay (admission to discharge)
@@ -134,6 +135,8 @@ HAVING COUNT(DISTINCT ICD9_CODE) > 1;
 
 -- 18. Retrieve the latest clinical note for each patient
 
+-- Finds each patient's most recent charted note time, then pulls that full note.
+-- Useful for showing the latest clinical context per subject without duplicates.
 SELECT n.SUBJECT_ID, n.CHARTTIME, n.TEXT
 FROM NoteEvents n
 JOIN (
@@ -162,3 +165,4 @@ WHERE n1.CATEGORY = 'Radiology'
 AND (
     LOWER(n2.TEXT) LIKE '%surgery%'
 );
+
